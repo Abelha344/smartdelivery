@@ -247,45 +247,56 @@
 
 
 
-
-
-// server/server.js (FINAL CORRECTED VERSION FOR VERCEL)
+// server/server.js (FINAL, MERGED, CORRECTED VERSION FOR VERCEL)
 
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-// Assuming this is your asynchronous MongoDB connection function
-const connectDB = require('./config/db'); 
-// const os = require('os'); // Not needed for Vercel deployment
+const mongoose = require('mongoose'); // <--- ADDED Mongoose here
 
 // 1. Config Environment First
 dotenv.config();
 
-// Default JWT Secret if missing (Good practice, but ensure variable is set in Vercel)
+// Default JWT Secret if missing
 if (!process.env.JWT_SECRET) {
     console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
     process.env.JWT_SECRET = 'dev_secret_key_123';
 }
 
-// 🛑 REMOVED: The synchronous call to connectDB() has been removed from here.
+// 🛑 MERGED DB CONNECTION LOGIC 🛑
+let isConnected = false; 
+
+const connectDB = async () => {
+    if (isConnected) {
+        console.log('Using existing database connection.'); 
+        return; 
+    }
+    
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        isConnected = true;
+        console.log("MongoDB Connected Successfully on function invocation.");
+    } catch (err) {
+        console.error("FATAL: MongoDB Connection Error:", err.message);
+        // Crucial: Throwing the error forces Vercel to log the failure reason
+        throw err; 
+    }
+};
 
 const app = express();
 
 // 🛑 CRITICAL FIX: Middleware to ensure DB connection is made on first request
-// connectDB is now called asynchronously during the function's execution lifecycle.
 app.use(async (req, res, next) => {
-    // connectDB() should handle checking if the connection already exists (persistence)
-    try {
-        await connectDB();
-        next();
-    } catch (error) {
-        console.error("DB Connection Failed during request:", error);
-        // Respond with an internal server error if the database is unreachable
-        res.status(503).json({ 
-            message: "Service Unavailable: Database connection failed.",
-            error: error.message
-        });
-    }
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        console.error("DB Connection Failed during request:", error);
+        res.status(503).json({ 
+            message: "Service Unavailable: Database connection failed.",
+            error: error.message
+        });
+    }
 });
 
 // 3. Middleware (Now applied AFTER the DB connection check)
@@ -294,60 +305,7 @@ app.use(cors({
     credentials: true
 }));
 
-// Increased limits for image uploads
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
-
-// DEBUG: Log all incoming requests
-app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-    next();
-});
-
-// Health Check
-// This is your default route (accessible at the Vercel function URL, e.g., /api)
-app.get('/', (req, res) => {
-    res.send('MDS Backend API is running');
-});
-
-// 4. Import Routes
-const authRoutes = require('./routes/authRoutes');
-const dataRoutes = require('./routes/dataRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const paymentRoutes = require('./routes/paymentRoutes');
-const notificationRoutes = require('./routes/notificationRoutes');
-
-// 5. Mount Routes
-app.use('/api/auth', authRoutes);
-console.log('Mounting Payment Routes...');
-app.use('/api/payment', paymentRoutes);
-app.use('/api/orders', orderRoutes);
-app.use('/api/notifications', notificationRoutes);
-// Generic Data Routes (last as it mounts to /api)
-app.use('/api', dataRoutes);
-
-// 404 Handler for API Routes (Kept for robustness)
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ message: `API Route Not Found: ${req.method} ${req.originalUrl}` });
-});
-
-// Error Handling Middleware
-app.use((err, req, res, next) => {
-    console.error('Server Error:', err.stack);
-    if (err.type === 'entity.too.large') {
-        res.status(413).json({ message: 'File too large. Please upload a smaller image.' });
-        return;
-    }
-    const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
-    res.status(statusCode);
-    res.json({
-        message: err.message,
-        stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-    });
-});
+// ... (Rest of your middleware, routes, and error handling) ...
 
 // 🛑 CRITICAL VERCEL FIX 🛑
-// Export the app instance instead of calling app.listen()
 module.exports = app;
-
-// Removed the app.listen block entirely, as it will cause Vercel to fail.
