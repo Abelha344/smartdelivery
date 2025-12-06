@@ -1,3 +1,4 @@
+
 {
   "version": 2,
   "name": "smartdelivery", 
@@ -11,7 +12,7 @@
       }
     },
     {
-      "src": "server/server.js",
+      "src": "server/package.json", 
       "use": "@vercel/node"
     }
   ],
@@ -19,7 +20,7 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "server/server.js"
+      "dest": "server/dist/server.js" 
     },
     
     {
@@ -32,4 +33,4 @@
       "dest": "frontend/dist/index.html"
     }
   ]
-} 
+}
