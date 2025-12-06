@@ -1,4 +1,3 @@
-
 {
   "version": 2,
   "name": "smartdelivery", 
@@ -17,20 +16,18 @@
     }
   ],
   
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "server/dist/server.js" 
+      "source": "/api/(.*)",
+      "destination": "/server/dist/server.js" 
     },
-    
     {
-      "src": "/(assets/.*)",
-      "dest": "frontend/dist/$1"
+      "source": "/assets/(.*)",
+      "destination": "/frontend/dist/assets/$1" 
     },
-    
     {
-      "src": "/(.*)",
-      "dest": "frontend/dist/index.html"
+      "source": "/(.*)",
+      "destination": "/frontend/dist/index.html" 
     }
   ]
 }
