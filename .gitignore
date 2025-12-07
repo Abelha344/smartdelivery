@@ -1,0 +1,4 @@
+server/.env
+frontend/.env
+.env
+.env.local
