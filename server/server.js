@@ -144,9 +144,7 @@
 
 
 
-
-
-// server/server.js - FINAL STABLE VERSION FOR RENDER DEPLOYMENT
+// server/server.js - FINAL STABLE VERSION WITH ROUTE CASE-SENSITIVITY FIX
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -200,6 +198,7 @@ app.use(express.json());
 // -------------------------------------------------------------------------
 app.use(async (req, res, next) => {
     if (!isConnected) {
+        // Attempt to connect if not connected
         try {
             await connectDB();
             return next();
@@ -215,19 +214,25 @@ app.use(async (req, res, next) => {
 });
 
 // Import and use routes
-// Ensure these files exist in your './routes' directory
+// NOTE: Imports are fixed to match the EXACT casing and presence of files in your /routes folder
 const authRoutes = require('./routes/authRoutes');
-const orderRoutes = require('./routes/orderRoutes');
+const orderRoutes = require('./routes/OrderRoutes');         // <-- Fixed casing to match 'OrderRoutes.js'
 const paymentRoutes = require('./routes/paymentRoutes');
-const userRoutes = require('./routes/userRoutes');
-const adminRoutes = require('./routes/adminRoutes');
+const dataRoutes = require('./routes/dataRoutes');           // <-- Added available route
+const notificationRoutes = require('./routes/notificationRoutes'); // <-- Added available route
+
+// userRoutes and adminRoutes imports were REMOVED to prevent crash
 
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/admin', adminRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/data', dataRoutes);           // <-- Mounted available route
+app.use('/api/notifications', notificationRoutes); // <-- Mounted available route
+
+// NOTE: The routes below were removed because their files were missing, causing the crash.
+// app.use('/api/users', userRoutes);
+// app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -247,8 +252,8 @@ app.get('/api', (req, res) => {
         endpoints: {
             auth: '/api/auth',
             orders: '/api/orders',
-            users: '/api/users',
-            admin: '/api/admin',
+            users: '(Temporarily Disabled)', // Updated status
+            admin: '(Temporarily Disabled)', // Updated status
             payment: '/api/payment',
             health: '/api/health'
         }
@@ -276,7 +281,7 @@ app.use('*', (req, res) => {
 // RENDER START FIX: Simple and Robust Server Start Block
 // -------------------------------------------------------------------------
 
-// Simply start the server. Rely on the middleware to check/handle DB connection.
+// Simply start the server. We rely on the middleware to handle initial DB connection.
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
