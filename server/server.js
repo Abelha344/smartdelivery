@@ -213,7 +213,7 @@ app.use(async (req, res, next) => {
 // Import and use routes
 // NOTE: Imports are fixed to match the EXACT casing and presence of files in your /routes folder
 const authRoutes = require('./routes/authRoutes');
-const orderRoutes = require('./routes/OrderRoutes');         // <-- Fixed casing to match 'OrderRoutes.js'
+const orderRoutes = require('./routes/orderRoutes');         // <-- Fixed casing to match 'OrderRoutes.js'
 const paymentRoutes = require('./routes/paymentRoutes');
 const dataRoutes = require('./routes/dataRoutes');           // <-- Added available route
 const notificationRoutes = require('./routes/notificationRoutes'); // <-- Added available route
