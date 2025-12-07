@@ -149,8 +149,7 @@
 
 
 
-
-// server/server.js - FINAL VERSION FOR VERCEL DEPLOYMENT
+// server/server.js - OPTIMIZED FOR RENDER DEPLOYMENT
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -170,13 +169,11 @@ let isConnected = false;
 
 const connectDB = async () => {
     if (isConnected) {
-        console.log('Using existing database connection.');
+        // console.log('Using existing database connection.'); // Commented out for cleaner production logs
         return;
     }
 
     try {
-        // NOTE: The MONGO_URI from your .env is used here,
-        // which now correctly points to your Atlas database.
         await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mds');
         isConnected = true;
         console.log("MongoDB Connected Successfully.");
@@ -188,61 +185,54 @@ const connectDB = async () => {
 
 const app = express();
 
-// CRITICAL FIX: Middleware to ensure DB connection is made on first request
-app.use(async (req, res, next) => {
-    try {
-        await connectDB();
-        next();
-    } catch (error) {
-        console.error("DB Connection Failed during request:", error);
-        res.status(503).json({
-            message: "Service Unavailable: Database connection failed.",
-            error: error.message
-        });
-    }
-});
-
 // Middleware
+// -------------------------------------------------------------------------
+// SECURE CORS FIX: Use the FRONTEND_URL environment variable from Render
+// -------------------------------------------------------------------------
+const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
+
 app.use(cors({
-    origin: true,
-    credentials: true
+    origin: allowedOrigin,
+    credentials: true // Crucial for passing cookies/session headers
 }));
+
 app.use(express.json());
 
-// =========================================================================
-// !!! TEMPORARY FIX: INCLUDED MINIMAL USER/ADMIN ROUTES HERE TO AVOID ERROR !!!
-// =========================================================================
-
-// Placeholder for routes that were previously in './routes/userRoutes'
-const userRouter = express.Router();
-userRouter.get('/profile', (req, res) => {
-    res.json({ message: "User profile endpoint is working (Placeholder)." });
+// -------------------------------------------------------------------------
+// NOTE: Database connection is handled once before server start (see final block)
+// This middleware is now ONLY for handling the DB status check/reporting for requests
+// -------------------------------------------------------------------------
+app.use(async (req, res, next) => {
+    if (!isConnected) {
+        // Attempt to connect if not yet connected, but relies mostly on the startup connectDB() call
+        try {
+            await connectDB();
+            return next();
+        } catch (error) {
+            console.error("DB Connection Failed during request:", error);
+            return res.status(503).json({
+                message: "Service Unavailable: Database connection failed.",
+                error: error.message
+            });
+        }
+    }
+    next();
 });
-userRouter.put('/update', (req, res) => {
-    res.json({ message: "User update endpoint is working (Placeholder)." });
-});
-
-// Placeholder for routes that were previously in './routes/adminRoutes'
-const adminRouter = express.Router();
-adminRouter.get('/', (req, res) => {
-    res.json({ message: "Admin routes are running (Placeholder)." });
-});
-// =========================================================================
-
 
 // Import and use routes
+// Ensure these files exist in your './routes' directory
 const authRoutes = require('./routes/authRoutes');
 const orderRoutes = require('./routes/orderRoutes');
-const paymentRoutes = require('./routes/paymentRoutes'); // <--- FIX: Payment Router Import
-// const userRoutes = require('./routes/userRoutes'); // Using local placeholder
-// const adminRoutes = require('./routes/adminRoutes'); // Using local placeholder
+const paymentRoutes = require('./routes/paymentRoutes');
+const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
-app.use('/api/users', userRouter);     // Using the local 'userRouter'
-app.use('/api/admin', adminRouter);   // Using the local 'adminRouter'
-app.use('/api/payment', paymentRoutes); // <--- FIX: Payment Router Mounting
+app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/payment', paymentRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -264,7 +254,7 @@ app.get('/api', (req, res) => {
             orders: '/api/orders',
             users: '/api/users',
             admin: '/api/admin',
-            payment: '/api/payment', // Added for completeness
+            payment: '/api/payment',
             health: '/api/health'
         }
     });
@@ -287,15 +277,22 @@ app.use('*', (req, res) => {
     });
 });
 
-// CRITICAL VERCEL FIX: Export the app for serverless functions
-if (process.env.VERCEL) {
-    // Export for Vercel serverless
-    module.exports = app;
-} else {
-    // Start server locally
-    const PORT = process.env.PORT || 5000;
+// -------------------------------------------------------------------------
+// RENDER/NODE START FIX: Standard server start block for persistent hosting
+// -------------------------------------------------------------------------
+const PORT = process.env.PORT || 5000;
+
+// 1. Connect to DB first, then start listening
+connectDB().then(() => {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
         console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
     });
-}
+}).catch(error => {
+    console.error("Failed to start server due to fatal DB error:", error);
+    // Exit the process so Render knows the server failed
+    process.exit(1); 
+});
+
+// Export the app instance (for potential testing/middleware chaining)
+module.exports = app;
