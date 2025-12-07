@@ -1,14 +1,9 @@
 {
   "version": 2,
   "name": "smartdelivery",
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/dist",
   "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
     {
       "src": "server/server.js",
       "use": "@vercel/node"
@@ -20,12 +15,26 @@
       "dest": "/server/server.js"
     },
     {
+      "src": "/_next/static/(.*)",
+      "dest": "/frontend/dist/_next/static/$1"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/frontend/dist/assets/$1"
+    },
+    {
       "src": "/(.*)",
       "dest": "/frontend/dist/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/frontend/dist/index.html"
     }
   ],
   "env": {
     "MONGO_URI": "@mongo_uri",
-    "JWT_SECRET": "@jwt_secret"
+    "JWT_SECRET": "@jwt_secret",
+    "CHAPA_SECRET_KEY": "@chapa_secret_key",
+    "FRONTEND_URL": "https://smartdelivery.vercel.app"
   }
 }
