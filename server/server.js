@@ -146,10 +146,7 @@
 
 
 
-
-
-
-// server/server.js - OPTIMIZED FOR RENDER DEPLOYMENT
+// server/server.js - FINAL STABLE VERSION FOR RENDER DEPLOYMENT
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
@@ -169,7 +166,7 @@ let isConnected = false;
 
 const connectDB = async () => {
     if (isConnected) {
-        // console.log('Using existing database connection.'); // Commented out for cleaner production logs
+        // console.log('Using existing database connection.');
         return;
     }
 
@@ -199,12 +196,10 @@ app.use(cors({
 app.use(express.json());
 
 // -------------------------------------------------------------------------
-// NOTE: Database connection is handled once before server start (see final block)
-// This middleware is now ONLY for handling the DB status check/reporting for requests
+// DB CONNECTION MIDDLEWARE: Checks connection status on every request
 // -------------------------------------------------------------------------
 app.use(async (req, res, next) => {
     if (!isConnected) {
-        // Attempt to connect if not yet connected, but relies mostly on the startup connectDB() call
         try {
             await connectDB();
             return next();
@@ -278,21 +273,15 @@ app.use('*', (req, res) => {
 });
 
 // -------------------------------------------------------------------------
-// RENDER/NODE START FIX: Standard server start block for persistent hosting
+// RENDER START FIX: Simple and Robust Server Start Block
 // -------------------------------------------------------------------------
+
+// Simply start the server. Rely on the middleware to check/handle DB connection.
 const PORT = process.env.PORT || 5000;
 
-// 1. Connect to DB first, then start listening
-connectDB().then(() => {
-    app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
-        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
-}).catch(error => {
-    console.error("Failed to start server due to fatal DB error:", error);
-    // Exit the process so Render knows the server failed
-    process.exit(1); 
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// Export the app instance (for potential testing/middleware chaining)
 module.exports = app;
