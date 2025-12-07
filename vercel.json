@@ -1,33 +1,31 @@
 {
   "version": 2,
-  "name": "smartdelivery", 
-  
+  "name": "smartdelivery",
   "builds": [
     {
       "src": "frontend/package.json",
       "use": "@vercel/static-build",
       "config": {
-        "outputDirectory": "dist" 
+        "distDir": "dist"
       }
     },
     {
-      "src": "server/package.json", 
+      "src": "server/server.js",
       "use": "@vercel/node"
     }
   ],
-  
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "/server/dist/server.js" 
+      "src": "/api/(.*)",
+      "dest": "/server/server.js"
     },
     {
-      "source": "/assets/(.*)",
-      "destination": "/dist/assets/$1" 
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/dist/index.html" 
+      "src": "/(.*)",
+      "dest": "/frontend/dist/$1"
     }
-  ]
+  ],
+  "env": {
+    "MONGO_URI": "@mongo_uri",
+    "JWT_SECRET": "@jwt_secret"
+  }
 }

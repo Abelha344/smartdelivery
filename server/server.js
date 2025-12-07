@@ -1,311 +1,123 @@
-
-// // const express = require('express');
-// // const dotenv = require('dotenv');
-// // const cors = require('cors');
-// // const connectDB = require('./config/db');
-// // const os = require('os');
-
-// // // 1. Config Environment First
-// // dotenv.config();
-
-// // // Default JWT Secret if missing
-// // if (!process.env.JWT_SECRET) {
-// //   console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
-// //   process.env.JWT_SECRET = 'dev_secret_key_123';
-// // }
-
-// // // 2. Connect to Database
-// // connectDB();
-
-// // const app = express();
-
-// // // 3. Middleware
-// // app.use(cors({
-// //   origin: true, 
-// //   credentials: true
-// // }));
-
-// // // Increased limits for image uploads (100mb to handle large base64 strings)
-// // app.use(express.json({ limit: '100mb' }));
-// // app.use(express.urlencoded({ limit: '100mb', extended: true }));
-
-// // // DEBUG: Log all incoming requests
-// // app.use((req, res, next) => {
-// //   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-// //   next();
-// // });
-
-// // // Health Check
-// // app.get('/', (req, res) => {
-// //   res.send('MDS Backend API is running');
-// // });
-
-// // // 4. Import Routes
-// // // Importing here ensures all env vars and DB connections are ready
-// // const authRoutes = require('./routes/authRoutes');
-// // const dataRoutes = require('./routes/dataRoutes');
-// // const orderRoutes = require('./routes/orderRoutes');
-// // const paymentRoutes = require('./routes/paymentRoutes');
-// // const notificationRoutes = require('./routes/notificationRoutes');
-
-// // // 5. Mount Routes
-// // // Specific routes first
-// // app.use('/api/auth', authRoutes);
-
-// // // Payment Routes - Logging for debug
-// // console.log('Mounting Payment Routes...');
-// // app.use('/api/payment', paymentRoutes);
-
-// // app.use('/api/orders', orderRoutes);
-// // app.use('/api/notifications', notificationRoutes);
-
-// // // Generic Data Routes (last as it mounts to /api)
-// // app.use('/api', dataRoutes);
-
-// // // 404 Handler for API Routes (Force JSON response)
-// // app.use('/api/*', (req, res) => {
-// //     res.status(404).json({ message: `API Route Not Found: ${req.method} ${req.originalUrl}` });
-// // });
-
-// // // Error Handling Middleware
-// // app.use((err, req, res, next) => {
-// //   console.error('Server Error:', err.stack);
-// //   // Handle PayloadTooLargeError specifically for better debugging
-// //   if (err.type === 'entity.too.large') {
-// //       res.status(413).json({ message: 'File too large. Please upload a smaller image.' });
-// //       return;
-// //   }
-// //   const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
-// //   res.status(statusCode);
-// //   res.json({
-// //     message: err.message,
-// //     stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-// //   });
-// // });
-
-// // const PORT = process.env.PORT || 5000;
-
-// // // Helper to find local IP
-// // const getLocalIp = () => {
-// //     const interfaces = os.networkInterfaces();
-// //     for (const name of Object.keys(interfaces)) {
-// //         for (const iface of interfaces[name]) {
-// //             if (iface.family === 'IPv4' && !iface.internal) {
-// //                 return iface.address;
-// //             }
-// //         }
-// //     }
-// //     return 'localhost';
-// // };
-
-// // app.listen(PORT, () => {
-// //     const ip = getLocalIp();
-// //     console.log(`Server started on port ${PORT}`);
-// //     console.log(`> Local:   http://localhost:${PORT}`);
-// //     console.log(`> Network: http://${ip}:${PORT} (Use this for Mobile testing)`);
-// // });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// const express = require('express');
-// const dotenv = require('dotenv');
-// const cors = require('cors');
-// const connectDB = require('./config/db');
-// // const os = require('os'); // Not needed for Vercel deployment
-
-// // 1. Config Environment First
-// dotenv.config();
-
-// // Default JWT Secret if missing (Good practice, but ensure variable is set in Vercel)
-// if (!process.env.JWT_SECRET) {
-//     console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
-//     process.env.JWT_SECRET = 'dev_secret_key_123';
-// }
-
-// // 2. Connect to Database
-// connectDB();
-
-// const app = express();
-
-// // 3. Middleware
-// app.use(cors({
-//     origin: true, 
-//     credentials: true
-// }));
-
-// // Increased limits for image uploads
-// app.use(express.json({ limit: '100mb' }));
-// app.use(express.urlencoded({ limit: '100mb', extended: true }));
-
-// // DEBUG: Log all incoming requests
-// app.use((req, res, next) => {
-//     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-//     next();
-// });
-
-// // Health Check
-// // This is your default route (accessible at the Vercel function URL, e.g., /api)
-// app.get('/', (req, res) => {
-//     res.send('MDS Backend API is running');
-// });
-
-// // 4. Import Routes
-// const authRoutes = require('./routes/authRoutes');
-// const dataRoutes = require('./routes/dataRoutes');
-// const orderRoutes = require('./routes/orderRoutes');
-// const paymentRoutes = require('./routes/paymentRoutes');
-// const notificationRoutes = require('./routes/notificationRoutes');
-
-// // 5. Mount Routes
-// app.use('/api/auth', authRoutes);
-// console.log('Mounting Payment Routes...');
-// app.use('/api/payment', paymentRoutes);
-// app.use('/api/orders', orderRoutes);
-// app.use('/api/notifications', notificationRoutes);
-// // Generic Data Routes (last as it mounts to /api)
-// app.use('/api', dataRoutes);
-
-// // 404 Handler for API Routes (This route will be handled by Vercel's routing, but kept for robustness)
-// app.use('/api/*', (req, res) => {
-//     res.status(404).json({ message: `API Route Not Found: ${req.method} ${req.originalUrl}` });
-// });
-
-// // Error Handling Middleware
-// app.use((err, req, res, next) => {
-//     console.error('Server Error:', err.stack);
-//     if (err.type === 'entity.too.large') {
-//         res.status(413).json({ message: 'File too large. Please upload a smaller image.' });
-//         return;
-//     }
-//     const statusCode = res.statusCode && res.statusCode !== 200 ? res.statusCode : 500;
-//     res.status(statusCode);
-//     res.json({
-//         message: err.message,
-//         stack: process.env.NODE_ENV === 'production' ? null : err.stack,
-//     });
-// });
-
-// //  CRITICAL VERCEL FIX 
-// // Export the app instance instead of calling app.listen()
-// module.exports = app;
-
-// // Removed the app.listen block entirely, as it will cause Vercel to fail.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// server/server.js (FINAL, MERGED, CORRECTED VERSION FOR VERCEL)
-
+// server/server.js - FINAL VERSION FOR VERCEL DEPLOYMENT
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const mongoose = require('mongoose'); // <--- ADDED Mongoose here
+const mongoose = require('mongoose');
 
 // 1. Config Environment First
 dotenv.config();
 
 // Default JWT Secret if missing
 if (!process.env.JWT_SECRET) {
-    console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
-    process.env.JWT_SECRET = 'dev_secret_key_123';
+    console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
+    process.env.JWT_SECRET = 'dev_secret_key_123';
 }
 
-// 🛑 MERGED DB CONNECTION LOGIC 🛑
-let isConnected = false; 
+// Database Connection Logic
+let isConnected = false;
 
 const connectDB = async () => {
-    if (isConnected) {
-        console.log('Using existing database connection.'); 
-        return; 
-    }
-    
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
-        isConnected = true;
-        console.log("MongoDB Connected Successfully on function invocation.");
-    } catch (err) {
-        console.error("FATAL: MongoDB Connection Error:", err.message);
-        // Crucial: Throwing the error forces Vercel to log the failure reason
-        throw err; 
-    }
+    if (isConnected) {
+        console.log('Using existing database connection.');
+        return;
+    }
+
+    try {
+        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mds');
+        isConnected = true;
+        console.log("MongoDB Connected Successfully.");
+    } catch (err) {
+        console.error("FATAL: MongoDB Connection Error:", err.message);
+        throw err;
+    }
 };
 
 const app = express();
 
-// 🛑 CRITICAL FIX: Middleware to ensure DB connection is made on first request
+// CRITICAL FIX: Middleware to ensure DB connection is made on first request
 app.use(async (req, res, next) => {
-    try {
-        await connectDB();
-        next();
-    } catch (error) {
-        console.error("DB Connection Failed during request:", error);
-        res.status(503).json({ 
-            message: "Service Unavailable: Database connection failed.",
-            error: error.message
-        });
-    }
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        console.error("DB Connection Failed during request:", error);
+        res.status(503).json({
+            message: "Service Unavailable: Database connection failed.",
+            error: error.message
+        });
+    }
 });
 
-// 3. Middleware (Now applied AFTER the DB connection check)
+// Middleware
 app.use(cors({
-    origin: true, 
-    credentials: true
+    origin: true,
+    credentials: true
 }));
+app.use(express.json());
 
-// ... (Rest of your middleware, routes, and error handling) ...
+// Import and use routes
+const authRoutes = require('./routes/authRoutes');
+const orderRoutes = require('./routes/orderRoutes');
+const userRoutes = require('./routes/userRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 
-// 🛑 CRITICAL VERCEL FIX 🛑
-module.exports = app;
+// Mount routes
+app.use('/api/auth', authRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/admin', adminRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        message: 'Server is running',
+        timestamp: new Date().toISOString(),
+        database: isConnected ? 'Connected' : 'Disconnected'
+    });
+});
+
+// Root endpoint
+app.get('/api', (req, res) => {
+    res.json({
+        message: 'Mekelle Delivery Service API',
+        version: '1.0.0',
+        endpoints: {
+            auth: '/api/auth',
+            orders: '/api/orders',
+            users: '/api/users',
+            admin: '/api/admin',
+            health: '/api/health'
+        }
+    });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
+});
+
+// 404 handler
+app.use('*', (req, res) => {
+    res.status(404).json({
+        message: 'API endpoint not found',
+        path: req.originalUrl
+    });
+});
+
+// CRITICAL VERCEL FIX: Export the app for serverless functions
+if (process.env.VERCEL) {
+    // Export for Vercel serverless
+    module.exports = app;
+} else {
+    // Start server locally
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+}
