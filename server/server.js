@@ -184,7 +184,7 @@ const app = express();
 const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(cors({
-    origin: '*',
+    origin: allowedOrigin,
     credentials: true // Crucial for passing cookies/session headers
 }));
 
