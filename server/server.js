@@ -133,11 +133,6 @@
 
 
 
-
-
-
-
-
 // server/server.js - FINAL STABLE VERSION WITH ROUTE CASE-SENSITIVITY FIX
 const express = require('express');
 const dotenv = require('dotenv');
@@ -207,16 +202,24 @@ app.use(async (req, res, next) => {
     next();
 });
 
+// Import controllers directly for the critical sync route
+const { syncWithClerk } = require('./controllers/authController');
+
 // Import and use routes
-// NOTE: Imports are fixed to match the EXACT casing and presence of files in your /routes folder
 const authRoutes = require('./routes/authRoutes');
 const orderRoutes = require('./routes/orderRoutes');         
 const paymentRoutes = require('./routes/paymentRoutes');
 const dataRoutes = require('./routes/dataRoutes');           
 const notificationRoutes = require('./routes/notificationRoutes'); 
 
-// Mount routes
-app.use('/api/auth', authRoutes);
+// -------------------------------------------------------------------------
+// FIX: Force the critical sync route to be recognized first
+// -------------------------------------------------------------------------
+app.post('/api/auth/sync', syncWithClerk);
+// -------------------------------------------------------------------------
+
+// Mount ALL other routes
+app.use('/api/auth', authRoutes); // This will handle all other /api/auth routes like /login, /register, /me
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/data', dataRoutes);           
@@ -231,14 +234,6 @@ app.get('/api/health', (req, res) => {
         database: isConnected ? 'Connected' : 'Disconnected'
     });
 });
-
-// -------------------------------------------------------------------------
-// TEMPORARY DEBUG ROUTE: Check if any routing works 
-// -------------------------------------------------------------------------
-app.get('/api/test-route', (req, res) => {
-    res.status(200).json({ message: 'The test route works!' });
-});
-// -------------------------------------------------------------------------
 
 
 // Root endpoint
