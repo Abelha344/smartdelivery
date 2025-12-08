@@ -138,9 +138,6 @@
 
 
 
-
-
-
 // server/server.js - FINAL STABLE VERSION WITH ROUTE CASE-SENSITIVITY FIX
 const express = require('express');
 const dotenv = require('dotenv');
@@ -152,27 +149,27 @@ dotenv.config();
 
 // Default JWT Secret if missing
 if (!process.env.JWT_SECRET) {
-    console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
-    process.env.JWT_SECRET = 'dev_secret_key_123';
+    console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
+    process.env.JWT_SECRET = 'dev_secret_key_123';
 }
 
 // Database Connection Logic
 let isConnected = false;
 
 const connectDB = async () => {
-    if (isConnected) {
-        // console.log('Using existing database connection.');
-        return;
-    }
+    if (isConnected) {
+        // console.log('Using existing database connection.');
+        return;
+    }
 
-    try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mds');
-        isConnected = true;
-        console.log("MongoDB Connected Successfully.");
-    } catch (err) {
-        console.error("FATAL: MongoDB Connection Error:", err.message);
-        throw err;
-    }
+    try {
+        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mds');
+        isConnected = true;
+        console.log("MongoDB Connected Successfully.");
+    } catch (err) {
+        console.error("FATAL: MongoDB Connection Error:", err.message);
+        throw err;
+    }
 };
 
 const app = express();
@@ -184,8 +181,8 @@ const app = express();
 const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(cors({
-    origin: allowedOrigin,
-    credentials: true // Crucial for passing cookies/session headers
+    origin: allowedOrigin,
+    credentials: true // Crucial for passing cookies/session headers
 }));
 
 app.use(express.json());
@@ -194,84 +191,87 @@ app.use(express.json());
 // DB CONNECTION MIDDLEWARE: Checks connection status on every request
 // -------------------------------------------------------------------------
 app.use(async (req, res, next) => {
-    if (!isConnected) {
-        // Attempt to connect if not connected
-        try {
-            await connectDB();
-            return next();
-        } catch (error) {
-            console.error("DB Connection Failed during request:", error);
-            return res.status(503).json({
-                message: "Service Unavailable: Database connection failed.",
-                error: error.message
-            });
-        }
-    }
-    next();
+    if (!isConnected) {
+        // Attempt to connect if not connected
+        try {
+            await connectDB();
+            return next();
+        } catch (error) {
+            console.error("DB Connection Failed during request:", error);
+            return res.status(503).json({
+                message: "Service Unavailable: Database connection failed.",
+                error: error.message
+            });
+        }
+    }
+    next();
 });
 
 // Import and use routes
 // NOTE: Imports are fixed to match the EXACT casing and presence of files in your /routes folder
 const authRoutes = require('./routes/authRoutes');
-const orderRoutes = require('./routes/orderRoutes');         // <-- Fixed casing to match 'OrderRoutes.js'
+const orderRoutes = require('./routes/orderRoutes');         
 const paymentRoutes = require('./routes/paymentRoutes');
-const dataRoutes = require('./routes/dataRoutes');           // <-- Added available route
-const notificationRoutes = require('./routes/notificationRoutes'); // <-- Added available route
-
-// userRoutes and adminRoutes imports were REMOVED to prevent crash
+const dataRoutes = require('./routes/dataRoutes');           
+const notificationRoutes = require('./routes/notificationRoutes'); 
 
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payment', paymentRoutes);
-app.use('/api/data', dataRoutes);           // <-- Mounted available route
-app.use('/api/notifications', notificationRoutes); // <-- Mounted available route
-
-// NOTE: The routes below were removed because their files were missing, causing the crash.
-// app.use('/api/users', userRoutes);
-// app.use('/api/admin', adminRoutes);
+app.use('/api/data', dataRoutes);           
+app.use('/api/notifications', notificationRoutes); 
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        message: 'Server is running',
-        timestamp: new Date().toISOString(),
-        database: isConnected ? 'Connected' : 'Disconnected'
-    });
+    res.status(200).json({
+        status: 'OK',
+        message: 'Server is running',
+        timestamp: new Date().toISOString(),
+        database: isConnected ? 'Connected' : 'Disconnected'
+    });
 });
+
+// -------------------------------------------------------------------------
+// TEMPORARY DEBUG ROUTE: Check if any routing works 
+// -------------------------------------------------------------------------
+app.get('/api/test-route', (req, res) => {
+    res.status(200).json({ message: 'The test route works!' });
+});
+// -------------------------------------------------------------------------
+
 
 // Root endpoint
 app.get('/api', (req, res) => {
-    res.json({
-        message: 'Mekelle Delivery Service API',
-        version: '1.0.0',
-        endpoints: {
-            auth: '/api/auth',
-            orders: '/api/orders',
-            users: '(Temporarily Disabled)', // Updated status
-            admin: '(Temporarily Disabled)', // Updated status
-            payment: '/api/payment',
-            health: '/api/health'
-        }
-    });
+    res.json({
+        message: 'Mekelle Delivery Service API',
+        version: '1.0.0',
+        endpoints: {
+            auth: '/api/auth',
+            orders: '/api/orders',
+            users: '(Temporarily Disabled)', 
+            admin: '(Temporarily Disabled)', 
+            payment: '/api/payment',
+            health: '/api/health'
+        }
+    });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({
-        message: err.message || 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err : {}
-    });
+    console.error(err.stack);
+    res.status(err.status || 500).json({
+        message: err.message || 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? err : {}
+    });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-    res.status(404).json({
-        message: 'API endpoint not found',
-        path: req.originalUrl
-    });
+    res.status(404).json({
+        message: 'API endpoint not found',
+        path: req.originalUrl
+    });
 });
 
 // -------------------------------------------------------------------------
@@ -282,8 +282,8 @@ app.use('*', (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
 module.exports = app;
