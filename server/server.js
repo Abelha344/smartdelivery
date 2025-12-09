@@ -402,8 +402,6 @@
 
 
 
-
-
 // ==========================================================
 // 1. MODULE IMPORTS
 // ==========================================================
@@ -436,43 +434,49 @@ const PORT = process.env.PORT || 5000;
 // CRITICAL FIX: Required for secure cookies (JWTs/Sessions) to work on Render
 // Render uses a proxy/load balancer, and Express must trust it to recognize HTTPS.
 if (process.env.NODE_ENV === 'production') {
-    app.set('trust proxy', 1); // Set to 1 as Render uses one proxy layer
+    app.set('trust proxy', 1); // Set to 1 as Render uses one proxy layer
 }
 
 
 // ==========================================================
-// 4. CORS CONFIGURATION
+// 4. CORS CONFIGURATION (CRITICAL FIX APPLIED HERE)
 // ==========================================================
 
-// Define all allowed origins for reliable local/deployed behavior
-const allowedOrigins = [
-    // 1. Local Development Frontends
-    'http://localhost:5173', 
-    'http://127.0.0.1:5173',
-    // 2. Deployed Frontend URL (from environment variable)
-    process.env.FRONTEND_URL, 
-    // 3. Deployed Backend URL (Used for Chapa callback verification)
-    process.env.BACKEND_URL 
+// Normalize all required origins: Remove trailing slashes and filter out any empty values.
+// This ensures a clean comparison in the origin check.
+const normalizedOrigins = [
+    // 1. Local Development Frontends
+    'http://localhost:5173', 
+    'http://127.0.0.1:5173',
+    // 2. Deployed Frontend URL (from environment variable)
+    process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : null, 
+    // 3. Deployed Backend URL (Used for Chapa callback verification)
+    process.env.BACKEND_URL ? process.env.BACKEND_URL.replace(/\/$/, "") : null
 ].filter(Boolean);
 
-console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+console.log(`CORS allowed origins: ${normalizedOrigins.join(', ')}`);
 
 const corsOptions = {
-    origin: (origin, callback) => {
-        if (!origin) return callback(null, true); 
+    origin: (origin, callback) => {
+        // Allow requests with no origin (like mobile apps, curl requests)
+        if (!origin) return callback(null, true); 
 
-        if (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
-            callback(null, true);
-        } else {
-            console.warn(`CORS Error: Origin ${origin} not allowed`);
-            callback(new Error(`Origin ${origin} not allowed by CORS`));
-        }
-    },
-    // Ensure all necessary methods are included
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    // CRITICAL: Allows cookies (auth) to be sent cross-domain
-    credentials: true, 
-    optionsSuccessStatus: 204
+        // Normalize the incoming origin by removing the trailing slash
+        const normalizedOrigin = origin.replace(/\/$/, "");
+
+        // FIX: Check if the normalized incoming origin is strictly included in the normalized list
+        if (normalizedOrigins.includes(normalizedOrigin)) {
+            callback(null, true);
+        } else {
+            console.warn(`CORS Error: Origin ${origin} not allowed`);
+            callback(new Error(`Origin ${origin} not allowed by CORS`));
+        }
+    },
+    // Ensure all necessary methods are included
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    // CRITICAL: Allows cookies (auth) to be sent cross-domain
+    credentials: true, 
+    optionsSuccessStatus: 204
 };
 
 app.use(cors(corsOptions));
@@ -490,7 +494,7 @@ app.use(cookieParser());
 // 6. HEALTH CHECK & ROOT ROUTE
 // ==========================================================
 app.get('/', (req, res) => {
-    res.send(`Smart Delivery API is running on port ${PORT}`);
+    res.send(`Smart Delivery API is running on port ${PORT}`);
 });
 
 
@@ -509,14 +513,14 @@ app.use('/api/notifications', notificationRoutes);
 // 8. ERROR HANDLING MIDDLEWARE
 // ==========================================================
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    const errorMessage = err.message.includes('CORS') ? err.message : (err.message || 'Something broke on the server!');
-    
-    // Use the error status code if provided, otherwise default to 500
-    res.status(err.statusCode || 500).send({
-        success: false,
-        message: errorMessage
-    });
+    console.error(err.stack);
+    const errorMessage = err.message.includes('CORS') ? err.message : (err.message || 'Something broke on the server!');
+    
+    // Use the error status code if provided, otherwise default to 500
+    res.status(err.statusCode || 500).send({
+        success: false,
+        message: errorMessage
+    });
 });
 
 
@@ -524,5 +528,5 @@ app.use((err, req, res, next) => {
 // 9. START SERVER
 // ==========================================================
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });
