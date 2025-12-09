@@ -125,6 +125,119 @@
 
 
 
+// // ==========================================================
+// // 1. MODULE IMPORTS
+// // ==========================================================
+// const express = require('express');
+// const cors = require('cors');
+// const dotenv = require('dotenv');
+// const cookieParser = require('cookie-parser');
+
+// // Load environment variables from .env file
+// dotenv.config();
+
+// const dbConnect = require('./config/dbConnect');
+
+// // ==========================================================
+// // 2. ROUTE IMPORTS (Food routes REMOVED)
+// // ==========================================================
+// const authRoutes = require('./routes/authRoutes');
+// const orderRoutes = require('./routes/orderRoutes');
+// const paymentRoutes = require('./routes/paymentRoutes');
+// const restaurantRoutes = require('./routes/restaurantRoutes');
+// const notificationRoutes = require('./routes/notificationRoutes');
+
+// // ==========================================================
+// // 3. INITIALIZATION
+// // ==========================================================
+// dbConnect(); // Connect to MongoDB
+// const app = express();
+// const PORT = process.env.PORT || 5000;
+
+// // ==========================================================
+// // 4. CORS CONFIGURATION (FIXED for Local and Deployed)
+// // ==========================================================
+
+// // Define all allowed origins for reliable local/deployed behavior
+// const allowedOrigins = [
+//     // 1. Local Development Frontends (CRITICAL FIX for local errors)
+//     'http://localhost:5173', 
+//     'http://127.0.0.1:5173',
+//     // 2. Deployed Frontend URL (from environment variable)
+//     process.env.FRONTEND_URL, // e.g., https://smartdelivery.netlify.app
+//     // 3. Deployed Backend URL
+//     process.env.BACKEND_URL // e.g., https://smartdelivery-egb4.onrender.com
+// ].filter(Boolean);
+
+// console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+
+// const corsOptions = {
+//     origin: (origin, callback) => {
+//         // Allow requests with no origin (like mobile apps or curl requests)
+//         if (!origin) return callback(null, true); 
+
+//         // Check if the origin is in our allowed list
+//         if (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+//             callback(null, true);
+//         } else {
+//             console.warn(`CORS Error: Origin ${origin} not allowed`);
+//             callback(new Error(`Origin ${origin} not allowed by CORS`));
+//         }
+//     },
+//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//     credentials: true, // Allow cookies and authentication headers (important for Clerk)
+//     optionsSuccessStatus: 204
+// };
+
+// app.use(cors(corsOptions));
+
+
+// // ==========================================================
+// // 5. MIDDLEWARE
+// // ==========================================================
+// app.use(express.json()); 
+// app.use(express.urlencoded({ extended: true }));
+// app.use(cookieParser());
+
+
+// // ==========================================================
+// // 6. HEALTH CHECK & ROOT ROUTE
+// // ==========================================================
+// app.get('/', (req, res) => {
+//     res.send(`Smart Delivery API is running on port ${PORT}`);
+// });
+
+
+// // ==========================================================
+// // 7. API ROUTES (Food routes REMOVED)
+// // ==========================================================
+// app.use('/api/auth', authRoutes);
+// app.use('/api/orders', orderRoutes);
+// app.use('/api/payments', paymentRoutes);
+// app.use('/api/restaurants', restaurantRoutes);
+// app.use('/api/notifications', notificationRoutes);
+
+
+// // ==========================================================
+// // 8. ERROR HANDLING MIDDLEWARE
+// // ==========================================================
+// app.use((err, req, res, next) => {
+//     console.error(err.stack);
+//     const errorMessage = err.message.includes('CORS') ? err.message : (err.message || 'Something broke on the server!');
+    
+//     res.status(err.statusCode || 500).send({
+//         success: false,
+//         message: errorMessage
+//     });
+// });
+
+
+// // ==========================================================
+// // 9. START SERVER
+// // ==========================================================
+// app.listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`);
+// });
 
 
 
@@ -133,152 +246,283 @@
 
 
 
-// server/server.js - FINAL STABLE VERSION WITH ROUTE CASE-SENSITIVITY FIX
+
+
+
+
+
+
+
+
+
+
+
+
+
+// // ==========================================================
+// // 1. MODULE IMPORTS
+// // ==========================================================
+// const express = require('express');
+// const cors = require('cors');
+// const dotenv = require('dotenv');
+// const cookieParser = require('cookie-parser');
+
+// // Load environment variables from .env file
+// dotenv.config();
+
+// const dbConnect = require('./config/dbConnect');
+
+// // ==========================================================
+// // 2. ROUTE IMPORTS 
+// // ==========================================================
+// const authRoutes = require('./routes/authRoutes');
+// const orderRoutes = require('./routes/orderRoutes');
+// const paymentRoutes = require('./routes/paymentRoutes');
+// const restaurantRoutes = require('./routes/restaurantRoutes');
+// // FIX: Corrected the path from '//routes/...' to './routes/...'
+// const notificationRoutes = require('./routes/notificationRoutes');
+// // REMOVED: Food routes import is no longer needed.
+
+// // ==========================================================
+// // 3. INITIALIZATION
+// // ==========================================================
+// dbConnect(); // Connect to MongoDB
+// const app = express();
+// const PORT = process.env.PORT || 5000;
+
+// // ==========================================================
+// // 4. CORS CONFIGURATION
+// // ==========================================================
+
+// // Define all allowed origins for reliable local/deployed behavior
+// const allowedOrigins = [
+//     // 1. Local Development Frontends
+//     'http://localhost:5173', 
+//     'http://127.0.0.1:5173',
+//     // 2. Deployed Frontend URL (from environment variable)
+//     process.env.FRONTEND_URL, 
+//     // 3. Deployed Backend URL
+//     process.env.BACKEND_URL 
+// ].filter(Boolean);
+
+// console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+
+// const corsOptions = {
+//     origin: (origin, callback) => {
+//         if (!origin) return callback(null, true); 
+
+//         if (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+//             callback(null, true);
+//         } else {
+//             console.warn(`CORS Error: Origin ${origin} not allowed`);
+//             callback(new Error(`Origin ${origin} not allowed by CORS`));
+//         }
+//     },
+//     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//     credentials: true, 
+//     optionsSuccessStatus: 204
+// };
+
+// app.use(cors(corsOptions));
+
+
+// // ==========================================================
+// // 5. MIDDLEWARE
+// // ==========================================================
+// app.use(express.json()); 
+// app.use(express.urlencoded({ extended: true }));
+// app.use(cookieParser());
+
+
+// // ==========================================================
+// // 6. HEALTH CHECK & ROOT ROUTE
+// // ==========================================================
+// app.get('/', (req, res) => {
+//     res.send(`Smart Delivery API is running on port ${PORT}`);
+// });
+
+
+// // ==========================================================
+// // 7. API ROUTES 
+// // ==========================================================
+// app.use('/api/auth', authRoutes);
+// app.use('/api/orders', orderRoutes);
+// app.use('/api/payment', paymentRoutes);
+// // FIX: /api/restaurants router will now handle /api/restaurants AND /api/foods
+// app.use('/api/restaurants', restaurantRoutes); 
+// app.use('/api/notifications', notificationRoutes);
+
+
+// // ==========================================================
+// // 8. ERROR HANDLING MIDDLEWARE
+// // ==========================================================
+// app.use((err, req, res, next) => {
+//     console.error(err.stack);
+//     const errorMessage = err.message.includes('CORS') ? err.message : (err.message || 'Something broke on the server!');
+//     
+//     res.status(err.statusCode || 500).send({
+//         success: false,
+//         message: errorMessage
+//     });
+// });
+
+
+// // ==========================================================
+// // 9. START SERVER
+// // ==========================================================
+// app.listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`);
+// });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ==========================================================
+// 1. MODULE IMPORTS
+// ==========================================================
 const express = require('express');
-const dotenv = require('dotenv');
 const cors = require('cors');
-const mongoose = require('mongoose');
+const dotenv = require('dotenv');
+const cookieParser = require('cookie-parser');
 
-// 1. Config Environment First
+// Load environment variables from .env file
 dotenv.config();
 
-// Default JWT Secret if missing
-if (!process.env.JWT_SECRET) {
-    console.warn("WARNING: JWT_SECRET is not defined. Using default secret for development.");
-    process.env.JWT_SECRET = 'dev_secret_key_123';
-}
+const dbConnect = require('./config/dbConnect');
 
-// Database Connection Logic
-let isConnected = false;
-
-const connectDB = async () => {
-    if (isConnected) {
-        // console.log('Using existing database connection.');
-        return;
-    }
-
-    try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/mds');
-        isConnected = true;
-        console.log("MongoDB Connected Successfully.");
-    } catch (err) {
-        console.error("FATAL: MongoDB Connection Error:", err.message);
-        throw err;
-    }
-};
-
-const app = express();
-
-// Middleware
-// -------------------------------------------------------------------------
-// SECURE CORS FIX: Use the FRONTEND_URL environment variable from Render
-// -------------------------------------------------------------------------
-const allowedOrigin = process.env.FRONTEND_URL || 'http://localhost:3000';
-
-app.use(cors({
-    origin: allowedOrigin,
-    credentials: true // Crucial for passing cookies/session headers
-}));
-
-app.use(express.json());
-
-// -------------------------------------------------------------------------
-// DB CONNECTION MIDDLEWARE: Checks connection status on every request
-// -------------------------------------------------------------------------
-app.use(async (req, res, next) => {
-    if (!isConnected) {
-        // Attempt to connect if not connected
-        try {
-            await connectDB();
-            return next();
-        } catch (error) {
-            console.error("DB Connection Failed during request:", error);
-            return res.status(503).json({
-                message: "Service Unavailable: Database connection failed.",
-                error: error.message
-            });
-        }
-    }
-    next();
-});
-
-// Import controllers directly for the critical sync route
-const { syncWithClerk } = require('./controllers/authController');
-
-// Import and use routes
+// ==========================================================
+// 2. ROUTE IMPORTS 
+// ==========================================================
 const authRoutes = require('./routes/authRoutes');
-const orderRoutes = require('./routes/orderRoutes');         
+const orderRoutes = require('./routes/orderRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
-const dataRoutes = require('./routes/dataRoutes');           
-const notificationRoutes = require('./routes/notificationRoutes'); 
+const restaurantRoutes = require('./routes/restaurantRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
-// -------------------------------------------------------------------------
-// FIX: Force the critical sync route to be recognized first
-// -------------------------------------------------------------------------
-app.post('/api/auth/sync', syncWithClerk);
-// -------------------------------------------------------------------------
-
-// Mount ALL other routes
-app.use('/api/auth', authRoutes); // This will handle all other /api/auth routes like /login, /register, /me
-app.use('/api/orders', orderRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/data', dataRoutes);           
-app.use('/api/notifications', notificationRoutes); 
-
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-    res.status(200).json({
-        status: 'OK',
-        message: 'Server is running',
-        timestamp: new Date().toISOString(),
-        database: isConnected ? 'Connected' : 'Disconnected'
-    });
-});
-
-
-// Root endpoint
-app.get('/api', (req, res) => {
-    res.json({
-        message: 'Mekelle Delivery Service API',
-        version: '1.0.0',
-        endpoints: {
-            auth: '/api/auth',
-            orders: '/api/orders',
-            users: '(Temporarily Disabled)', 
-            admin: '(Temporarily Disabled)', 
-            payment: '/api/payment',
-            health: '/api/health'
-        }
-    });
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(err.status || 500).json({
-        message: err.message || 'Internal Server Error',
-        error: process.env.NODE_ENV === 'development' ? err : {}
-    });
-});
-
-// 404 handler
-app.use('*', (req, res) => {
-    res.status(404).json({
-        message: 'API endpoint not found',
-        path: req.originalUrl
-    });
-});
-
-// -------------------------------------------------------------------------
-// RENDER START FIX: Simple and Robust Server Start Block
-// -------------------------------------------------------------------------
-
-// Simply start the server. We rely on the middleware to handle initial DB connection.
+// ==========================================================
+// 3. INITIALIZATION
+// ==========================================================
+dbConnect(); // Connect to MongoDB
+const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+// CRITICAL FIX: Required for secure cookies (JWTs/Sessions) to work on Render
+// Render uses a proxy/load balancer, and Express must trust it to recognize HTTPS.
+if (process.env.NODE_ENV === 'production') {
+    app.set('trust proxy', 1); // Set to 1 as Render uses one proxy layer
+}
+
+
+// ==========================================================
+// 4. CORS CONFIGURATION
+// ==========================================================
+
+// Define all allowed origins for reliable local/deployed behavior
+const allowedOrigins = [
+    // 1. Local Development Frontends
+    'http://localhost:5173', 
+    'http://127.0.0.1:5173',
+    // 2. Deployed Frontend URL (from environment variable)
+    process.env.FRONTEND_URL, 
+    // 3. Deployed Backend URL (Used for Chapa callback verification)
+    process.env.BACKEND_URL 
+].filter(Boolean);
+
+console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true); 
+
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+            callback(null, true);
+        } else {
+            console.warn(`CORS Error: Origin ${origin} not allowed`);
+            callback(new Error(`Origin ${origin} not allowed by CORS`));
+        }
+    },
+    // Ensure all necessary methods are included
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    // CRITICAL: Allows cookies (auth) to be sent cross-domain
+    credentials: true, 
+    optionsSuccessStatus: 204
+};
+
+app.use(cors(corsOptions));
+
+
+// ==========================================================
+// 5. MIDDLEWARE
+// ==========================================================
+app.use(express.json()); 
+app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+
+// ==========================================================
+// 6. HEALTH CHECK & ROOT ROUTE
+// ==========================================================
+app.get('/', (req, res) => {
+    res.send(`Smart Delivery API is running on port ${PORT}`);
 });
 
-module.exports = app;
+
+// ==========================================================
+// 7. API ROUTES 
+// ==========================================================
+// All API routes are correctly mounted under the /api prefix
+app.use('/api/auth', authRoutes);
+app.use('/api/orders', orderRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/restaurants', restaurantRoutes); 
+app.use('/api/notifications', notificationRoutes);
+
+
+// ==========================================================
+// 8. ERROR HANDLING MIDDLEWARE
+// ==========================================================
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    const errorMessage = err.message.includes('CORS') ? err.message : (err.message || 'Something broke on the server!');
+    
+    // Use the error status code if provided, otherwise default to 500
+    res.status(err.statusCode || 500).send({
+        success: false,
+        message: errorMessage
+    });
+});
+
+
+// ==========================================================
+// 9. START SERVER
+// ==========================================================
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
