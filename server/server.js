@@ -259,6 +259,25 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // // ==========================================================
 // // 1. MODULE IMPORTS
 // // ==========================================================
@@ -279,9 +298,7 @@
 // const orderRoutes = require('./routes/orderRoutes');
 // const paymentRoutes = require('./routes/paymentRoutes');
 // const restaurantRoutes = require('./routes/restaurantRoutes');
-// // FIX: Corrected the path from '//routes/...' to './routes/...'
 // const notificationRoutes = require('./routes/notificationRoutes');
-// // REMOVED: Food routes import is no longer needed.
 
 // // ==========================================================
 // // 3. INITIALIZATION
@@ -290,35 +307,50 @@
 // const app = express();
 // const PORT = process.env.PORT || 5000;
 
+// // CRITICAL FIX: Required for secure cookies (JWTs/Sessions) to work on Render
+// // Render uses a proxy/load balancer, and Express must trust it to recognize HTTPS.
+// if (process.env.NODE_ENV === 'production') {
+//     app.set('trust proxy', 1); // Set to 1 as Render uses one proxy layer
+// }
+
+
 // // ==========================================================
-// // 4. CORS CONFIGURATION
+// // 4. CORS CONFIGURATION (CRITICAL FIX APPLIED HERE)
 // // ==========================================================
 
-// // Define all allowed origins for reliable local/deployed behavior
-// const allowedOrigins = [
+// // Normalize all required origins: Remove trailing slashes and filter out any empty values.
+// // This ensures a clean comparison in the origin check.
+// const normalizedOrigins = [
 //     // 1. Local Development Frontends
 //     'http://localhost:5173', 
 //     'http://127.0.0.1:5173',
 //     // 2. Deployed Frontend URL (from environment variable)
-//     process.env.FRONTEND_URL, 
-//     // 3. Deployed Backend URL
-//     process.env.BACKEND_URL 
+//     process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, "") : null, 
+//     // 3. Deployed Backend URL (Used for Chapa callback verification)
+//     process.env.BACKEND_URL ? process.env.BACKEND_URL.replace(/\/$/, "") : null
 // ].filter(Boolean);
 
-// console.log(`CORS allowed origins: ${allowedOrigins.join(', ')}`);
+// console.log(`CORS allowed origins: ${normalizedOrigins.join(', ')}`);
 
 // const corsOptions = {
 //     origin: (origin, callback) => {
+//         // Allow requests with no origin (like mobile apps, curl requests)
 //         if (!origin) return callback(null, true); 
 
-//         if (allowedOrigins.includes(origin) || allowedOrigins.includes(origin.replace(/\/$/, ""))) {
+//         // Normalize the incoming origin by removing the trailing slash
+//         const normalizedOrigin = origin.replace(/\/$/, "");
+
+//         // FIX: Check if the normalized incoming origin is strictly included in the normalized list
+//         if (normalizedOrigins.includes(normalizedOrigin)) {
 //             callback(null, true);
 //         } else {
 //             console.warn(`CORS Error: Origin ${origin} not allowed`);
 //             callback(new Error(`Origin ${origin} not allowed by CORS`));
 //         }
 //     },
+//     // Ensure all necessary methods are included
 //     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+//     // CRITICAL: Allows cookies (auth) to be sent cross-domain
 //     credentials: true, 
 //     optionsSuccessStatus: 204
 // };
@@ -345,10 +377,10 @@
 // // ==========================================================
 // // 7. API ROUTES 
 // // ==========================================================
+// // All API routes are correctly mounted under the /api prefix
 // app.use('/api/auth', authRoutes);
 // app.use('/api/orders', orderRoutes);
 // app.use('/api/payment', paymentRoutes);
-// // FIX: /api/restaurants router will now handle /api/restaurants AND /api/foods
 // app.use('/api/restaurants', restaurantRoutes); 
 // app.use('/api/notifications', notificationRoutes);
 
@@ -360,6 +392,7 @@
 //     console.error(err.stack);
 //     const errorMessage = err.message.includes('CORS') ? err.message : (err.message || 'Something broke on the server!');
 //     
+//     // Use the error status code if provided, otherwise default to 500
 //     res.status(err.statusCode || 500).send({
 //         success: false,
 //         message: errorMessage
@@ -373,6 +406,9 @@
 // app.listen(PORT, () => {
 //     console.log(`Server is running on port ${PORT}`);
 // });
+
+
+
 
 
 
@@ -485,8 +521,9 @@ app.use(cors(corsOptions));
 // ==========================================================
 // 5. MIDDLEWARE
 // ==========================================================
-app.use(express.json()); 
-app.use(express.urlencoded({ extended: true }));
+// FIX: Increased payload limit to 10MB to resolve PayloadTooLargeError
+app.use(express.json({ limit: '10mb' })); 
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(cookieParser());
 
 
